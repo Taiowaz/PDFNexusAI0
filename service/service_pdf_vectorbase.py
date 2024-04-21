@@ -18,14 +18,16 @@ def process_pdf_vector(vector_name: str, pdf_file: str):
     # 对报告进行分割处理
     text_list = parse_pdf(pdf_file)
     # 上传到oss
-    text_url = upload(text_list)
-    # 异步批量转换文本为向量
-    # 创建异步任务
-    task = em.create_async_task(text_url)
-    # 获取embeddings文件的url
-    embeddings_url = em.wait_task(task)
-    # 对url对应文件进行处理,获取embeddings列表
-    embedding_list = em.get_embeddings_from_url(embeddings_url)
+    texts_url = upload(text_list)
+    # 批量转换文本为向量
+    embedding_list = em.get_batch_embeddings(texts_url)
+    # 判断文本数量与向量数量是否一致
+    if (len(text_list) != len(embedding_list)):
+        with open("file/test/text_list.txt", "w") as f:
+            f.write("\n".join(text_list))
+        with open("file/test/embedding_list.txt", "w") as f:
+            f.write("\n".join(embedding_list))
+        return
     # 对文本与对应向量进行一个组合
     text_embedding_list = []
     for text, embedding in zip(text_list, embedding_list):
@@ -62,11 +64,15 @@ def process_pdf_vectorbase_in_threads(vector_name: str, pdf_folder: str, event: 
     shutil.rmtree(pdf_folder)
 
 # 获取所有知识库名
+
+
 def get_all_vector_base():
     vector_base_info = db.get_all_vector_base_db()
     return vector_base_info
 
 # 判断数据库是否存在
+
+
 def vector_base_exists(name):
     return db.vector_base_exists(name)
 

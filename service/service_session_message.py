@@ -1,6 +1,6 @@
 from db_api.api.api_pinecone import query
 from db_api.models import ChatSession, Message, VectorBaseInfo
-from db_api.api.api_embedding import get_embedding
+from db_api.api.api_embedding import get_single_embedding
 from db_api.api.api_qwen import call_stream_with_messages
 import db_api.sqlite as db
 
@@ -88,7 +88,7 @@ def number_to_words(n):
 
 def query_integrate_content(content: str, vector_name):
     # 获取输入文本对应向量
-    content_embedding = get_embedding(content)
+    content_embedding = get_single_embedding(content)
     # 获取相关文本列表
     text_list = query(vector_name, content_embedding)
     prompt = ""

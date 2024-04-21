@@ -143,7 +143,6 @@ with gr.Blocks(
                     value=0,
                     allow_custom_value=False,
                 )
-                # with gr.Row():
                 # 输入文本
                 user_input = gr.MultimodalTextbox(
                     interactive=True,
@@ -151,13 +150,6 @@ with gr.Blocks(
                     placeholder="Please input something...",
                     show_label=False,
                 )
-                # # 按钮
-                # button_chatbot_input = gr.DuplicateButton(
-                #     value="submit",
-                #     variant="primary",
-                #     scale=2,
-                # )
-                # 输入文本提交函数
                 input_text_submit = user_input.submit(
                     fn=update_input_text,
                     inputs=[user_input, chatbot],

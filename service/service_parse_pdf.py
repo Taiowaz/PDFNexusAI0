@@ -76,13 +76,19 @@ def parse_pdf(filename: str) -> list:
             if chunk.metadata.text_as_html is not None:
                 if text_list:  # 列表不为空
                     text_list[-1] = text_list[-1] + \
-                        "\n\n" + chunk.metadata.text_as_html
+                        ":" + chunk.metadata.text_as_html        # 用冒号进行分隔标题与表格，防止与批量转换向量的换行符冲突
                 else:
                     text_list.append(chunk.metadata.text_as_html)
+    
+    # 将文字中的换行符替换为空格，防止与批量转换向量的换行符冲突
+    for text in text_list:
+        text.replace("\n", "  ")
 
     return text_list
 
 # 分解文件夹内多个pdf报告
+
+
 def parse_pdflist(dir: str) -> list:
     files = os.listdir(dir)
     text_list = []
@@ -90,5 +96,3 @@ def parse_pdflist(dir: str) -> list:
         file_path = os.path.join(dir, file_name)
         text_list.extend(parse_pdf(file_path))
     return text_list
-
-

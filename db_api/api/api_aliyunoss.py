@@ -19,7 +19,6 @@ def upload(text_list:list):
     bucket.put_object(object_name,text_content)
     # 获取文件url
     url = bucket.sign_url('GET', object_name, 3600)
-    print(url)
     return url;
 
 if __name__=="__main__":
