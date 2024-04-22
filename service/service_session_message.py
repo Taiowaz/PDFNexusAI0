@@ -106,7 +106,6 @@ def query_integrate_content(content: str, vector_name):
     Please combine it with my question and decide whether to reply based on the relevant information:
     {prompt}
     '''
-    print("\n\ncontent:", content)
 
     return content
 
@@ -114,7 +113,6 @@ def query_integrate_content(content: str, vector_name):
 # 与千问对话  ！！！保存对话时，不带提示词，输入到模型的是带提示词的内容
 def talk_stream_with_qwen(chat_session_id, vectorbase_name, messages: list):
     input_content = messages[-1]['content']
-    print("input_text:", input_content)
     # 创建新的消息
     message = Message(chat_session_id=chat_session_id,
                       role='user', content=input_content)
@@ -127,7 +125,7 @@ def talk_stream_with_qwen(chat_session_id, vectorbase_name, messages: list):
             content=input_content,
             vector_name=vectorbase_name
         )
-
+    print("\ninput_content:"+str(input_content)+"\n")
     # 构建messages 输入到LLM的内容，带有提示词
     messages.append({
         'role': 'user',

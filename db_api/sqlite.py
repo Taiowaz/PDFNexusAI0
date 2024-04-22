@@ -29,7 +29,6 @@ def get_all_vector_base_db():
     session = Session()
     vectorbase_infos = session.query(VectorBaseInfo).all()
     vector_base_info = [{'name': base.name} for base in vectorbase_infos]
-    print(vector_base_info)
     session.close()
     return vector_base_info
 

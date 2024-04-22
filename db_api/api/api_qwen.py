@@ -32,7 +32,6 @@ def get_reply(input: str, relative_text: list) -> str:
     )
 
     if resp.status_code == HTTPStatus.OK:
-        print(resp.output.choices[0]['message']['content'])
         # 添加记录到messages中
         messages.append(
             {

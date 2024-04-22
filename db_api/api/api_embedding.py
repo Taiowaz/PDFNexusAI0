@@ -25,61 +25,6 @@ def get_batch_embeddings(texts_url: str) -> list:
         print(rsp)
         return []
 
-# """ 创建异步处理文本转向量任务 """
-
-
-# def create_async_task(url: str):
-#     rsp = BatchTextEmbedding.async_call(
-#         model=BatchTextEmbedding.Models.text_embedding_async_v2,
-#         url=url,
-#         text_type="document"
-#     )
-#     if rsp.status_code == HTTPStatus.OK:
-#         print(rsp.output)
-#     else:
-#         print('Failed, status_code: %s, code: %s, message: %s' %
-#               (rsp.status_code, rsp.message))
-#     return rsp
-
-
-# """ 获取异步任务信息 """
-
-
-# def fetch_task_status(task):
-#     status = BatchTextEmbedding.fetch(task)
-#     if status.status_code == HTTPStatus.OK:
-#         print(status.output.task_status)
-#     else:
-#         print('Failed, status_code: %s, code: %s, message: %s' %
-#               (status.status_code, status.code, status.message))
-#     return status
-
-
-# """ 等待异步任务结束 """
-
-
-# def wait_task(task):
-#     rsp = BatchTextEmbedding.wait(task)
-#     if rsp.status_code == HTTPStatus.OK:
-#         print(rsp.output.task_status)
-#         return rsp.output.url
-#     else:
-#         print('Failed, status_code: %s, code: %s, message: %s' %
-#               (rsp.status_code, rsp.code, rsp.message))
-
-
-# """ 取消异步任务 """
-
-
-# def cancel_task(task):
-#     rsp = BatchTextEmbedding.cancel(task)
-#     if (rsp.status_code == HTTPStatus.OK):
-#         print(rsp.output.task_status)
-#     else:
-#         print('Filed, status_code: %s, code: %s, message: %s' %
-#               (rsp.status_code, rsp.code, rsp.message))
-#     return rsp
-
 
 """ 获取向量列表 """
 

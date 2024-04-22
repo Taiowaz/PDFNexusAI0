@@ -79,11 +79,11 @@ def parse_pdf(filename: str) -> list:
                         ":" + chunk.metadata.text_as_html        # 用冒号进行分隔标题与表格，防止与批量转换向量的换行符冲突
                 else:
                     text_list.append(chunk.metadata.text_as_html)
-    
-    # 将文字中的换行符替换为空格，防止与批量转换向量的换行符冲突
-    for text in text_list:
-        text.replace("\n", "  ")
 
+    # 将文字中的换行符替换为空格，防止与批量转换向量的换行符冲突
+    text_list = [text.replace("\n", "//") for text in text_list]
+    # 打印日志
+    print(f"\nParsed: {filename}\n")
     return text_list
 
 # 分解文件夹内多个pdf报告

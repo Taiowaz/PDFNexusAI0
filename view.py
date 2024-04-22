@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 import time
 import gradio as gr
 from matplotlib.pyplot import sca
@@ -29,21 +30,28 @@ def get_knowledge_base_info() -> list:
 
 def create_knowledgebase_info_or_parse_pdf_file(knowledgebase_name, files):
     knowledgebase_name = str(knowledgebase_name).strip()
+    # 上传文件组件值
+    file_upload_pdf_value = []
     if knowledgebase_name == "None":
         gr.Info("Please choose or create a knowledge base")
+        file_upload_pdf_value = files
     else:
         if not pv.vector_base_exists(knowledgebase_name):
             pv.create_vector_base_db(knowledgebase_name)
 
         gr.Info("Processing...")
+        # 创建文件夹
         pdf_folder = "file/temp/" + \
             str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         os.makedirs(pdf_folder, exist_ok=True)  # 忽略已存在的文件夹导致的异常
-
+        # 保存文件
         for file in files:
+            # 获取文件名
+            base_name = os.path.basename(file)
+            # 创建目标文件的路径
+            dest_file = os.path.join(pdf_folder, base_name)
             # 保存文件
-            with open(os.path.join(pdf_folder, str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))+'.pdf'), 'wb') as f:
-                f.write(file)
+            shutil.copyfile(file, dest_file)
         # 异步对文件进行处理
         event_end_parse_pdf = threading.Event()
         thread_parse_pdf = threading.Thread(
@@ -52,7 +60,9 @@ def create_knowledgebase_info_or_parse_pdf_file(knowledgebase_name, files):
         )
         thread_parse_pdf.start()
         event_end_parse_pdf.wait()
+        # 完成提示
         gr.Info("Done")
+
     """ 返回一个组件才能更新组件 """
     return (
         gr.Dropdown(
@@ -70,12 +80,19 @@ def create_knowledgebase_info_or_parse_pdf_file(knowledgebase_name, files):
             scale=8,
             interactive=True,
             allow_custom_value=True,
-        ))
+        ),
+        file_upload_pdf_value,
+        gr.MultimodalTextbox(
+            interactive=True,
+            file_types=["pdf"],
+            placeholder="Please input something...",
+            show_label=False,
+        )
+    )
 
 
 # 将用户输入立刻更新到chat界面中
 def update_input_text(user_input, chat_history):
-    print(user_input["text"])
     user_msg = str(user_input["text"]).strip()
     # 用户输入不为空时，才发送到LLM
     if user_msg != "":
@@ -88,11 +105,9 @@ def update_input_text(user_input, chat_history):
 
 
 def bot_resp(knowledgebase_name, chat_history):
-    print(chat_history)
     knowledgebase_name = str(knowledgebase_name).strip()
     # 构建消息记录 用于LLM输入
     input_text = chat_history[-1][0]
-    print(chat_history)
     message = {
         'role': 'user',
         'content': input_text
@@ -115,6 +130,7 @@ def bot_resp(knowledgebase_name, chat_history):
 
 """ 构建界面 """
 with gr.Blocks(
+    title="PDFNexusAI",
     theme=gr.themes.Soft(
         spacing_size=gr.themes.sizes.spacing_sm,
         text_size=gr.themes.sizes.text_sm,
@@ -185,13 +201,15 @@ with gr.Blocks(
                 label="Upload PDF File",
                 scale=7,
                 file_types=['pdf'],
-                type="binary",
+                type='filepath',
             )
             # PDF文件处理函数绑定
             button_upload_pdf.click(
                 fn=create_knowledgebase_info_or_parse_pdf_file,
                 inputs=[dropdown_kb_upload, file_upload_pdf],
-                outputs=[dropdown_kb_input, dropdown_kb_upload]
+                # 在加载时，将按钮与相关输入禁用
+                outputs=[dropdown_kb_input, dropdown_kb_upload,
+                         file_upload_pdf, user_input]
             )
 
 # 启动界面

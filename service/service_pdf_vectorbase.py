@@ -21,13 +21,7 @@ def process_pdf_vector(vector_name: str, pdf_file: str):
     texts_url = upload(text_list)
     # 批量转换文本为向量
     embedding_list = em.get_batch_embeddings(texts_url)
-    # 判断文本数量与向量数量是否一致
-    if (len(text_list) != len(embedding_list)):
-        with open("file/test/text_list.txt", "w") as f:
-            f.write("\n".join(text_list))
-        with open("file/test/embedding_list.txt", "w") as f:
-            f.write("\n".join(embedding_list))
-        return
+
     # 对文本与对应向量进行一个组合
     text_embedding_list = []
     for text, embedding in zip(text_list, embedding_list):
@@ -39,6 +33,8 @@ def process_pdf_vector(vector_name: str, pdf_file: str):
         )
     # 存入向量数据库中
     pc.upsert(vector_name, text_embedding_list)
+    # 打印日志
+    print(f"\nIn stock: {pdf_file}\n")
 
 
 # 多线程处理PDF文件
@@ -58,6 +54,12 @@ def process_pdf_vectorbase_in_threads(vector_name: str, pdf_folder: str, event: 
         ]
     # 等待所有任务完成
     executor.shutdown(wait=True)
+    # 检查并处理异常
+    for future in futures:
+        try:
+            future.result()  # 这会抛出异常，如果任务中有任何异常
+        except Exception as e:
+            print(f"An error occurred while processing a PDF: {e}")
     # 通知主线程任务完成
     event.set()
     # 删除文件夹
