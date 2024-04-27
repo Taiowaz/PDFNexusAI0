@@ -9,6 +9,38 @@ import db_api.api.api_pinecone as pc
 import db_api.sqlite as db
 from service.service_parse_pdf import parse_pdf
 from db_api.api.api_aliyunoss import upload
+from db_api.api.api_qwen import call_qwen
+
+# LLM根据当前文本列表以及知识库描述知识库并更新
+
+
+def describe_knowledge_base(vecbase_base_name: str, text_list: list):
+    # 获取之前知识库描述
+    vector_base_info = db.get_vector_base_info_by_name(vecbase_base_name)
+    knowledge_base_detail = vector_base_info.detail
+    """ 测试 """
+    print(f"\nOriginal knowledge base description:\n{knowledge_base_detail}\n")
+    # 构建描述提示词
+    prompt = f'''
+    Original description of the knowledge base:{knowledge_base_detail}
+    A list of texts to add to the knowledge base:{str(text_list)}
+    Constraints:
+    1. Please combine these the original description with the new text list added to the knowledge base to generate a new description of the knowledge base.
+    2. The knowledge base description must and only needs to describe two aspects: Knowledge base definition and Content scope.
+    3. New descriptions should be no more than 100 words, just give me the new description, no need to provide other information.
+    Examples:
+    This is a knowledge base of relevant information about the aluminum industry. It contains multi-dimensional knowledge such as aluminum production processes, market analysis, environmental impact, policies and regulations, economic data, corporate competition landscape, and future industry trends.
+    '''
+    # 调用千问接口，获取新的知识库描述
+    knowledge_base_detail = call_qwen([{
+        "role": "user",
+        "content": prompt
+    }])
+    """ 测试 """
+    print(f"\nNew knowledge base description:\n{knowledge_base_detail}\n")
+    # 更新知识库描述
+    vector_base_info.detail = knowledge_base_detail
+    db.update_vector_base_detail(vector_base_info)
 
 
 """ 对pdf报告进行处理并放到向量库中 """
@@ -17,6 +49,8 @@ from db_api.api.api_aliyunoss import upload
 def process_pdf_vector(vector_name: str, pdf_file: str):
     # 对报告进行分割处理
     text_list = parse_pdf(pdf_file)
+    # 知识库描述
+    describe_knowledge_base(vector_name, text_list)
     # 上传到oss
     texts_url = upload(text_list)
     # 批量转换文本为向量
@@ -72,15 +106,16 @@ def get_all_vector_base():
     vector_base_info = db.get_all_vector_base_db()
     return vector_base_info
 
-# 判断数据库是否存在
+# 判断知识库是否存在
 
 
 def vector_base_exists(name):
     return db.vector_base_exists(name)
 
-# 创建向量库信息在数据库中
+# 创建知识库信息在数据库中
 
 
-def create_vector_base_db(name: str):
+def create_vectorbase_info_db(name: str):
     vectorbase_info = VectorBaseInfo(name=name, account="test")
-    db.create_vectorbase_info(vectorbase_info)
+    if pc.create_vectorbase(name):
+        db.create_vectorbase_info(vectorbase_info)

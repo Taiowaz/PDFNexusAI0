@@ -1,14 +1,25 @@
-from pinecone import Pinecone
+from pinecone import Pinecone, ServerlessSpec
 import uuid
 pc = Pinecone()
 
 # 创建向量库
 
 
-def create_vectorbase(vector_name: str):
-    pc.create_index(index_name=vector_name, metric='cosine', shards=1)
-
-    print(f'Vectorbase {vector_name} created successfully.')
+def create_vectorbase(vectorbase_name: str):
+    if vectorbase_name in pc.list_indexes().names():
+        print(f'\nVectorbase {vectorbase_name} already exists.\n')
+        return False
+    pc.create_index(
+        name=vectorbase_name,
+        dimension=1536,
+        metric='cosine',
+        spec=ServerlessSpec(
+            cloud="aws",
+            region="us-east-1"
+        )
+    )
+    print(f'\nVectorbase {vectorbase_name} created successfully.\n')
+    return True
 
 # 插入文本与向量组合列表
 
@@ -40,3 +51,4 @@ def query(index_name: str, vector: list) -> list:
     )
     text_list = [res.metadata['text'] for res in rsp.matches]
     return text_list
+

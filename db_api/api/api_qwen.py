@@ -2,28 +2,15 @@ from dashscope import Generation
 from dashscope.api_entities.dashscope_response import Role
 from http import HTTPStatus
 import random
-
 import db_api.sqlite as db
-
 from db_api.models import Message
 
+# 普通回复
+# 用于判定是否需要查询知识库
+# 以及对知识库进行描述
 
-def get_reply(input: str, relative_text: list) -> str:
-    # 构建相关文本
-    context = '\n'.join(relative_text)
-    # 构建提示词与问题
-    prompt = f'''请结合```内的内容回答问题。"
-    ```
-    {context}
-    ```
-    我的问题是：{input}。
-    '''
 
-    messages = [
-        {'role': Role.SYSTEM, 'content': 'You are a helpful assistant, please return appropriate output based on the input.'},
-        {'role': Role.USER, 'content': prompt}
-    ]
-
+def call_qwen(messages: list) -> str:
     resp = Generation.call(
         model=Generation.Models.qwen_max,
         messages=messages,
@@ -32,15 +19,10 @@ def get_reply(input: str, relative_text: list) -> str:
     )
 
     if resp.status_code == HTTPStatus.OK:
-        # 添加记录到messages中
-        messages.append(
-            {
-                'role': resp.output.choices[0]['message']['role'],
-                'content': resp.output.choices[0]['message']['content']
-            }
-        )
+        return resp.output.choices[0]['message']['content']
     else:
-        return "error"
+        print("\nError: ", resp.status_code)
+
 
 # 流式输出回复
 

@@ -17,6 +17,7 @@ class VectorBaseInfo(Base):
     id = Column(Integer, primary_key=True)
     account = Column(String(length=255))
     name = Column(String(length=255))
+    detail = Column(Text, default="")
     start_time = Column(DateTime(),
                         default=datetime.datetime.now())  # 首次创建时间
 

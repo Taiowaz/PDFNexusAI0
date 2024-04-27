@@ -43,6 +43,25 @@ def vector_base_exists(name):
     session.close()
     return vectorbase_info is not None
 
+# 按名字获取单个向量库信息
+
+
+def get_vector_base_info_by_name(name):
+    session = Session()
+    vectorbase_info = session.query(VectorBaseInfo).filter(
+        VectorBaseInfo.name == name).first()
+    session.close()
+    return vectorbase_info
+
+# 更新向量库描述
+
+
+def update_vector_base_detail(vector_base_info: VectorBaseInfo):
+    session = Session()
+    session.merge(vector_base_info)
+    session.commit()
+    session.close()
+
 
 """ LLM会话操作 """
 

@@ -8,7 +8,7 @@ import service.service_pdf_vectorbase as pv
 import service.service_session_message as sm
 import threading
 
-# messages
+# 消息记录
 messages = []
 
 # 定义输入框内容
@@ -33,12 +33,11 @@ def create_knowledgebase_info_or_parse_pdf_file(knowledgebase_name, files):
     # 上传文件组件值
     file_upload_pdf_value = []
     if knowledgebase_name == "None":
-        gr.Info("Please choose or create a knowledge base")
+        gr.Warning("Please choose or create a knowledge base")
         file_upload_pdf_value = files
     else:
         if not pv.vector_base_exists(knowledgebase_name):
-            pv.create_vector_base_db(knowledgebase_name)
-
+            pv.create_vectorbase_info_db(knowledgebase_name)
         gr.Info("Processing...")
         # 创建文件夹
         pdf_folder = "file/temp/" + \
@@ -126,6 +125,13 @@ def bot_resp(knowledgebase_name, chat_history):
             chat_history[-1][1] += char
             time.sleep(0.05)
             yield chat_history
+    # 将LLM回应内容加入到信息历史中
+    messages.append(
+        {
+            'role': 'assistant',
+            'content': chat_history[-1][1]
+        }
+    )
 
 
 """ 构建界面 """
@@ -176,9 +182,11 @@ with gr.Blocks(
                     inputs=[dropdown_kb_input, chatbot],
                     outputs=[chatbot]
                 )
+    with gr.Tab("ChatSession"):
+        gr.Markdown("## Chat Session")
     # 知识库构建界面
     with gr.Tab("Knowledge Base"):
-        gr.Markdown("## Build Knowledge Base")
+        gr.Markdown("## Build Your Own Knowledge Base")
         with gr.Column():
             with gr.Row():
                 dropdown_kb_upload = gr.Dropdown(

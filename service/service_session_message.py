@@ -1,7 +1,7 @@
 from db_api.api.api_pinecone import query
 from db_api.models import ChatSession, Message, VectorBaseInfo
 from db_api.api.api_embedding import get_single_embedding
-from db_api.api.api_qwen import call_stream_with_messages
+from db_api.api.api_qwen import call_stream_with_messages, call_qwen
 import db_api.sqlite as db
 
 
@@ -86,11 +86,11 @@ def number_to_words(n):
 # 利用知识库构建带有提示词内容
 
 
-def query_integrate_content(content: str, vector_name):
+def query_integrate_content(content: str, vectorbase_name):
     # 获取输入文本对应向量
     content_embedding = get_single_embedding(content)
     # 获取相关文本列表
-    text_list = query(vector_name, content_embedding)
+    text_list = query(vectorbase_name, content_embedding)
     prompt = ""
     i = 1
     for text in text_list:
@@ -102,7 +102,7 @@ def query_integrate_content(content: str, vector_name):
     You are a helpful assistant,
     This is my question:
     {content}
-    The following is relevant information. 
+    The following is relevant information.
     Please combine it with my question and decide whether to reply based on the relevant information:
     {prompt}
     '''
@@ -110,7 +110,7 @@ def query_integrate_content(content: str, vector_name):
     return content
 
 
-# 与千问对话  ！！！保存对话时，不带提示词，输入到模型的是带提示词的内容
+# 与千问对话 --保存对话时，不带提示词，输入到模型的是带提示词的内容
 def talk_stream_with_qwen(chat_session_id, vectorbase_name, messages: list):
     input_content = messages[-1]['content']
     # 创建新的消息
@@ -121,18 +121,44 @@ def talk_stream_with_qwen(chat_session_id, vectorbase_name, messages: list):
 
     # 选定知识库，则根据知识库构建内容
     if vectorbase_name != "None":
-        input_content = query_integrate_content(
-            content=input_content,
-            vector_name=vectorbase_name
-        )
+        # 判断是否需要查询知识库
+        flag = is_need_query_knowledgebase(messages, vectorbase_name)
+        """ 测试！！！ """
+        print("\nisQuery:"+str(flag)+"\n")
+        if flag == "Yes":
+            input_content = query_integrate_content(
+                content=input_content,
+                vector_name=vectorbase_name
+            )
+
     print("\ninput_content:"+str(input_content)+"\n")
     # 构建messages 输入到LLM的内容，带有提示词
-    messages.append({
-        'role': 'user',
-        'content': input_content
-    })
+    messages[-1]['content'] = input_content
+
+    print("\nmessages:"+str(messages)+"\n")
     # 向qwenAPI发送请求并流式输出
     stream_gen = call_stream_with_messages(chat_session_id, messages)
 
     # 返回流响应流
     return stream_gen
+
+
+# 判断当前问题是否需要查询知识库
+def is_need_query_knowledgebase(messages: list, vectorbase_name: str):
+    # 获取当前知识库描述
+    vectornase_info = db.get_vector_base_info_by_name(vectorbase_name)
+    knowledge_base_detail = vectornase_info.detail
+    # 获取用户输入
+    current_input = messages[-1]['content']
+    # 构建提示词，让模型选择是否需要查询知识库
+    prompt = f'''
+    Current input content: {current_input}
+    Details from my current knowledge base: {knowledge_base_detail}
+    Constraints:
+    1. Consider our chat history, your own knowledge and my knowledge base detail to decide whether you need me to query some information from this knowledge base for you to facilitate a reply.
+    2. Your answer must be either 'yes' or 'no'.
+    '''
+    # 将提示词更新到messages中
+    messages[-1]['content'] = prompt
+    # 调用qwenAPI,返回模型回复
+    return call_qwen(messages)
