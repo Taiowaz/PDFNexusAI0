@@ -63,7 +63,7 @@ def parse_pdf(filename: str) -> list:
         multipage_sections=True,
         combine_text_under_n_chars=0,
         new_after_n_chars=None,
-        max_characters=4096,
+        max_characters=1024,
     )
 
     text_list = []

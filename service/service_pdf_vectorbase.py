@@ -23,7 +23,7 @@ def describe_knowledge_base(vecbase_base_name: str, text_list: list):
     # 构建描述提示词
     prompt = f'''
     Original description of the knowledge base:{knowledge_base_detail}
-    A list of texts to add to the knowledge base:{str(text_list)}
+    A list of texts to add to the knowledge base:{str(text_list[0:4])}
     Constraints:
     1. Please combine these the original description with the new text list added to the knowledge base to generate a new description of the knowledge base.
     2. The knowledge base description must and only needs to describe two aspects: Knowledge base definition and Content scope.
@@ -31,6 +31,9 @@ def describe_knowledge_base(vecbase_base_name: str, text_list: list):
     Examples:
     This is a knowledge base of relevant information about the aluminum industry. It contains multi-dimensional knowledge such as aluminum production processes, market analysis, environmental impact, policies and regulations, economic data, corporate competition landscape, and future industry trends.
     '''
+    
+    """ 测试 """
+    print(f"\nDescribe Prompt:\n{prompt}\n")
     # 调用千问接口，获取新的知识库描述
     knowledge_base_detail = call_qwen([{
         "role": "user",

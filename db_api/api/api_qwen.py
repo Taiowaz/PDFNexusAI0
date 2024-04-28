@@ -21,7 +21,7 @@ def call_qwen(messages: list) -> str:
     if resp.status_code == HTTPStatus.OK:
         return resp.output.choices[0]['message']['content']
     else:
-        print("\nError: ", resp.status_code)
+        print("\nError: ", resp)
 
 
 # 流式输出回复

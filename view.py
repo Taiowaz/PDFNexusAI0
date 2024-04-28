@@ -154,6 +154,7 @@ with gr.Blocks(
             chatbot = gr.Chatbot(
                 bubble_full_width=False,
                 placeholder="Talking with Chatbot...",
+                avatar_images=['file/avatar/user.jpg','file/avatar/bot.png']
             )
             # 输入框
             with gr.Group():
